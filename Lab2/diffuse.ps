@@ -1,0 +1,42 @@
+#version 330
+
+in vec3 fragPos;
+in vec3 vsNormals;
+
+out vec4 fragColour;
+
+uniform vec3 lightPos;
+uniform vec3 viewPos;
+
+uniform float ambientStr;
+uniform float specularStr;
+
+const vec3 ambientColor = vec3(0.9, 0.8, 0.2);
+
+const int levels = 5;
+const float scaleFactor = 1.0/levels;
+vec3 diffuseColor = vec3(0.0, 0.0, 0.5);
+
+const vec3 specColor = vec3(1.0, 1.0, 1.0);
+
+void main(){
+	
+	// Global Lighting Variables
+	vec3 lightDir = normalize(lightPos - fragPos);
+	vec3 viewDir = normalize(viewPos - fragPos);
+	
+	float mat_kd = 1.0f;
+	float diffuse = max(0, dot(lightDir, vsNormals));
+	diffuseColor = diffuseColor * mat_kd * floor(diffuse * levels) * scaleFactor;
+
+	vec3 H = normalize(lightDir + viewDir);
+	float specular = 1.0;
+	if(dot(lightDir, vsNormals)>0.0)
+	{
+		specular = specularStr * pow(max(0, dot(H, vsNormals)), ambientStr);
+	}
+	float specMask = (pow(dot(H, vsNormals), ambientStr)>0.0)?1:0;
+	float edgeDetection = (dot(viewDir, vsNormals)>0.0)?1:0;
+	vec3 color = edgeDetection * (diffuseColor + specular * specMask);
+	fragColour = vec4(color, 1.0);
+}
